@@ -22,6 +22,7 @@ async function run() {
         const partsCollection = client.db('manufacturer').collection('parts');
         const reviewsCollection = client.db('manufacturer').collection('reviews');
         const ordersCollection = client.db('manufacturer').collection('orders');
+        const userCollection = client.db('manufacturer').collection('users');
 
         app.get('/purchase', async (req, res) => {
             const query = {};
@@ -37,6 +38,8 @@ async function run() {
             res.send(part);
         })
 
+
+
         app.get('/reviews', async (req, res) => {
             const query = {};
             const cursor = reviewsCollection.find(query);
@@ -50,13 +53,39 @@ async function run() {
             res.send(result);
         })
 
+        app.get('/orders', async (req, res) => {
+            const customer = req.query.customerMail
+                ;
+            const query = { customer: customer };
+            const orders = await ordersCollection.find(query).toArray();
+            res.send(orders);
+
+        })
+
         app.post('/orders', async (req, res) => {
             const orders = req.body;
-            const query = { purchase: orders.purchase, customerName: orders.customerName }
+            const query = { purchase: orders.purchase, customerName: orders.customerName };
+            const exist = await ordersCollection.findOne(query);
+
+            if (exist) {
+                res.send({ success: false, orders: exist })
+            }
             const result = await ordersCollection.insertOne(orders)
+            return res.send({ success: false, result });
+
+
+        })
+
+        app.put('/user/:email', async (req, res) => {
+            const email = req.params.email;
+            const user = req.body;
+            const filter = { email: email };
+            const options = { upsert: true };
+            const updateDoc = {
+                $set: user,
+            };
+            const result = await userCollection.updateOne(filter, updateDoc, options);
             res.send(result);
-
-
         })
 
 
