@@ -1,7 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 
 const app = express();
 const port = process.env.PORT || 5000
@@ -17,6 +17,30 @@ async function run() {
     try {
         await client.connect();
         console.log("Manufacturer DB Connected");
+        const partsCollection = client.db('manufacturer').collection('parts');
+        const reviewsCollection = client.db('manufacturer').collection('reviews');
+
+        app.get('/purchase', async (req, res) => {
+            const query = {};
+            const cursor = partsCollection.find(query);
+            const parts = await cursor.toArray();
+            res.send(parts);
+        })
+
+        app.get('/purchase/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) };
+            const part = await partsCollection.findOne(query);
+            res.send(part);
+        })
+
+        app.get('/reviews', async (req, res) => {
+            const query = {};
+            const cursor = reviewsCollection.find(query);
+            const parts = await cursor.toArray();
+            res.send(parts);
+        })
+
     }
     finally {
 
@@ -24,6 +48,8 @@ async function run() {
 }
 
 run().catch(console.dir);
+
+
 
 app.get('/', (req, res) => {
     res.send('Manufacturer Web App')
