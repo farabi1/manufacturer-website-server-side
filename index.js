@@ -2,6 +2,8 @@ const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
+var jwt = require('jsonwebtoken');
+const res = require('express/lib/response');
 
 const app = express();
 const port = process.env.PORT || 5000
@@ -19,6 +21,7 @@ async function run() {
         console.log("Manufacturer DB Connected");
         const partsCollection = client.db('manufacturer').collection('parts');
         const reviewsCollection = client.db('manufacturer').collection('reviews');
+        const ordersCollection = client.db('manufacturer').collection('orders');
 
         app.get('/purchase', async (req, res) => {
             const query = {};
@@ -45,6 +48,15 @@ async function run() {
             const newReview = req.body;
             const result = await reviewsCollection.insertOne(newReview);
             res.send(result);
+        })
+
+        app.post('/orders', async (req, res) => {
+            const orders = req.body;
+            const query = { purchase: orders.purchase, customerName: orders.customerName }
+            const result = await ordersCollection.insertOne(orders)
+            res.send(result);
+
+
         })
 
 
