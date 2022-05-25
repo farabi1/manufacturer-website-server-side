@@ -3,7 +3,6 @@ const cors = require('cors');
 require('dotenv').config();
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 var jwt = require('jsonwebtoken');
-const res = require('express/lib/response');
 
 const app = express();
 const port = process.env.PORT || 5000
@@ -54,6 +53,14 @@ async function run() {
             res.send(part);
         })
 
+        app.post('/purchase', async (req, res) => {
+            const newProducts = req.body;
+
+            const result = await partsCollection.insertOne(newProducts);
+
+            res.send(result)
+        })
+
 
 
         app.get('/reviews', async (req, res) => {
@@ -86,6 +93,31 @@ async function run() {
             }
             const result = await ordersCollection.insertOne(orders)
             return res.send({ success: false, result });
+
+
+        })
+        app.get('/users', async (req, res) => {
+            const users = await userCollection.find().toArray();
+            res.send(users);
+        });
+
+        app.get('/admin/:email', async (req, res) => {
+            const email = req.params.email;
+            const user = await userCollection.findOne({ email: email });
+            const isAdmin = user.role === 'admin';
+            res.send({ admin: isAdmin })
+        })
+
+        app.put('/users/admin/:email', async (req, res) => {
+            const email = req.params.email;
+
+            const filter = { email: email };
+            const options = { upsert: true };
+            const updateDoc = {
+                $set: { role: 'admin' },
+            };
+            const result = await userCollection.updateOne(filter, updateDoc, options);
+            res.send(result);
 
 
         })
